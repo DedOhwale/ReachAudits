@@ -40,7 +40,7 @@ Slashing can occur when a user is acting maliciously, enabling services to slash
 ## Actors
 **Stakers** are the party with the asset. Mix of ERC20 tokens, ETH, etc.
 
-- \textcolor{red}{@audit} We need to check for:
+- @audit We need to check for:
     - Correctness with asset depositing
         - Contract handles staked deposits correctly
     - Delegation mechanism
@@ -48,7 +48,7 @@ Slashing can occur when a user is acting maliciously, enabling services to slash
 
 **Operators** are the users who run the software built on EigenLayer. Stakers may delegate their assets to operators, which selects certain services to service.
 
-- \textcolor{red}{@audit} We need to check for:
+- @audit We need to check for:
     - Registration is non-tamperable
         - Someone else cannot register you
         - Cannot take anothers registration
@@ -61,7 +61,7 @@ Slashing can occur when a user is acting maliciously, enabling services to slash
 
 **Watchers- Future implementation** parties reliable for observing "rolled-up" claims (Not supported yet) and step in to invalidate a false claim. Essentially the operators supervisor.
 
-- \textcolor{red}{@audit} We need to check for:
+- @audit We need to check for:
     - Fraudproof period enforcement
         - Allow enough time for watcher to disprove claims
     - Punishment mechanisms
@@ -95,11 +95,11 @@ Withdraws and undelegations will go through the `StrategyManager` contract.
     - We cannot know immediately if funds are at stake, thus delay
     - Users enter the queued withdrawal process
         - Begin the withdrawal, signaling not to be placed "at stake"
-            - \textcolor{red}{@audit} Make sure this happens! There should be a flag or something.
+            - @audit Make sure this happens! There should be a flag or something.
         - Push updates to services (or have their operator do it)
         - Complete withdrawal after delay
-            - \textcolor{red}{@audit} Is this delay enough? Do we have to push updates to the services?
-            - \textcolor{red}{@audit} Is it possible to begin the withdrawal, not push updates, and withdraw the funds before getting slashed?
+            - @audit Is this delay enough? Do we have to push updates to the services?
+            - @audit Is it possible to begin the withdrawal, not push updates, and withdraw the funds before getting slashed?
 
 ### `DelegationManager`
 
@@ -108,23 +108,23 @@ Withdraws and undelegations will go through the `StrategyManager` contract.
 - Examine proper tracking of delegated assets, accurate assignment of tasks, and appropriate slashing conditions.
 - Funds earned may be sent to a `DelegationTerms`-type contract (or EOA)
     - Helps mediate the relationships between staker & operator
-    - \textcolor{red}{@audit} Check if this is a requirement & implemented correctly:
+    - @audit Check if this is a requirement & implemented correctly:
         - If it is not EOA, ensure delegation terms are conducted properly
             - Tracking and management of delegation relationships
             - Proper handling of payment & mediation
         - If it is EOA, is that handled properly?
 
 - `DelegationManager` works closely with `StrategyManager`.
-    - Keeps track of all operators (\textcolor{red}{@audit} make sure this is done correctly)
+    - Keeps track of all operators (@audit make sure this is done correctly)
         - Storing the delegation terms for each operator
         - Stores what operator each staker is delegated to
     - Staker becomes operator **irrevocably**
         - Operator is defined as `delegationTerms[operator]` not returning 0 address
-            - \textcolor{red}{@audit} Check if this is done, lost funds if not as we cannot change
-            - \textcolor{red}{@audit} Can we change another users return?
+            - @audit Check if this is done, lost funds if not as we cannot change
+            - @audit Can we change another users return?
     - Undelegation needs a delay or clawback mechanism
-        - \textcolor{red}{@audit} Again, check to make sure that this is implemented properly
-        - \textcolor{red}{@audit} Can we find a way to undelegate while funds are staked?
+        - @audit Again, check to make sure that this is implemented properly
+        - @audit Can we find a way to undelegate while funds are staked?
 
 ### `Strategy`
 
@@ -133,27 +133,27 @@ Withdraws and undelegations will go through the `StrategyManager` contract.
 - `Strategy` is in charge of defining methods of converting from `underlyingToken` and shares(and vice versa).
     - Make sure this works, and that the shares match the `underlyingToken` conversions
 - Assets 'may' be depositable & withdrawable in multiple forms
-    - \textcolor{red}{@audit} Check that only `StrategyManager` can conduct deposits & withdraws
+    - @audit Check that only `StrategyManager` can conduct deposits & withdraws
 - 'may' be passive or active with funds
 
 ### `Slasher`
 
 `Slasher` is the central point for slashing. Operators opt-in to being slashed by arbitrary contracts by calling `allowToSlash`.
 
-- \textcolor{red}{@audit} Make sure `allowToSlash` cannot be abused. Ensure proper access control
+- @audit Make sure `allowToSlash` cannot be abused. Ensure proper access control
 - A contract can revoke its slashing ability after `serveUntil` time
-    - \textcolor{red}{@audit} Can this be tampered with? Over/underflow?
+    - @audit Can this be tampered with? Over/underflow?
     - The time is stored in `contractCanSlashOperatorUntil[operator][contractAddress]`
-        - \textcolor{red}{@audit} ensure this works correctly and that the order is correct
+        - @audit ensure this works correctly and that the order is correct
 
 - Slashing is a multi-step process
     - First, you freeze the operator with `freezeOperator`
         - any `contractAddress` for which `contractCanSlashOperatorUntil[operator][contractAddress > 0`, can freeze the operator.
-            - \textcolor{red}{@audit} check access control & not `>=` or any way to tamper with time
+            - @audit check access control & not `>=` or any way to tamper with time
         - When an operator is frozen, and any staker delegated to them, cannot make new deposits or withdrawals, and cannot complete queued withdrawals.
-            - \textcolor{red}{@audit} Can we find a way around this?
+            - @audit Can we find a way around this?
     - Then, the owner of the `StrategyManager` can call the slash and unfreeze
-        -\textcolor{red}{@audit} Wouldn't this be the owner of the protocol? The services cannot slash?
+        -@audit Wouldn't this be the owner of the protocol? The services cannot slash?
 
 ### `EigenPodManager`
 
@@ -168,11 +168,11 @@ Withdraws and undelegations will go through the `StrategyManager` contract.
 - Allows user to stake ETH on the Beacon Chain
     - Then, restake the deposits into EigenLayer
         - A watcher is in charge of making sure the values are honest
-            - \textcolor{red}{@audit} Make sure that the watcher can intervene fairly and only in malicious scenarios
+            - @audit Make sure that the watcher can intervene fairly and only in malicious scenarios
 
 - Calls generally go from `EigenPod` -> `EigenPodManager` -> `StrategyManager` to trigger additional accounting knowledge within EigenLayer.
-- \textcolor{red}{@audit} Ensure that all of these access controls are done correctly.
+- @audit Ensure that all of these access controls are done correctly.
 - `EigenPod` is deployed using beacon proxy pattern
     - Allows simultaneous upgrades of all EigenPods.
-        - \textcolor{red}{@audit} Can we have a pod not be upgraded?
+        - @audit Can we have a pod not be upgraded?
 
